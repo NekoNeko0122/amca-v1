@@ -49,8 +49,9 @@ body{animation:pageIn .5s ease both}
 @keyframes glA{0%,83%,100%{transform:none;opacity:0}84%{transform:translate(-9px,2px) skewX(-6deg);clip-path:polygon(0 2%,100% 10%,100% 44%,0 36%);opacity:1}85%{opacity:0}86%{transform:translate(7px,-3px) skewX(4deg);clip-path:polygon(0 28%,100% 36%,100% 67%,0 59%);opacity:.9}86.5%{opacity:0}87%{transform:translate(-12px,4px) skewX(-8deg);clip-path:polygon(0 2%,100% 10%,100% 44%,0 36%);opacity:1}88%{opacity:0}}
 @keyframes glB{0%,83%,100%{transform:none;opacity:0}84%{transform:translate(11px,-3px) skewX(7deg);clip-path:polygon(0 56%,100% 62%,100% 92%,0 86%);opacity:1}85%{opacity:0}86%{transform:translate(-8px,2px) skewX(-5deg);clip-path:polygon(0 32%,100% 40%,100% 72%,0 64%);opacity:.85}86.5%{opacity:0}87%{transform:translate(14px,-2px) skewX(6deg);clip-path:polygon(0 56%,100% 62%,100% 92%,0 86%);opacity:1}88%{opacity:0}}
 @keyframes camSnap{0%,4%{opacity:0;filter:brightness(0) blur(1px)}5%{opacity:1;filter:brightness(8) blur(0px);text-shadow:0 0 40px #fff,0 0 20px #fff,0 0 8px #fff}22%{filter:brightness(1.6);text-shadow:0 0 18px rgba(69,182,217,.75)}55%{filter:brightness(1.06);text-shadow:none}100%{opacity:1;filter:brightness(1)}}
-@keyframes scanBeam{0%{left:0%;opacity:0}5%{opacity:1}88%{opacity:.9}100%{left:103%;opacity:0}}
+@keyframes scanBeam{0%{left:0%;opacity:0}4%{left:0%;opacity:1}45%{left:103%;opacity:.9}55%{left:103%;opacity:.9}96%{left:0%;opacity:.85}100%{left:0%;opacity:0}}
 @keyframes scanPass{0%{filter:brightness(1)}28%{filter:brightness(3.2) blur(.5px);color:#fff}62%{filter:brightness(1.4)}100%{filter:brightness(1)}}
+@keyframes scanReturn{0%{filter:brightness(1)}30%{filter:brightness(.4) blur(.3px);color:rgba(69,182,217,.5)}65%{filter:brightness(.92)}100%{filter:brightness(1)}}
 @keyframes shimmer{0%{left:-100%}100%{left:200%}}
 @keyframes scanDown{0%{top:8%;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:92%;opacity:0}}
 @keyframes scanStatus{0%,12%{opacity:0}22%{opacity:.65}80%{opacity:.65}90%,100%{opacity:0}}
@@ -86,12 +87,12 @@ nav.scrolled{background:rgba(7,19,32,.96);border-color:rgba(69,182,217,.15)}
 .hero-title::before{color:rgba(224,122,69,.78);clip-path:polygon(0 2%,100% 10%,100% 44%,0 36%);animation:glA 6s 1.6s infinite}
 .hero-title::after{color:rgba(107,142,214,.78);clip-path:polygon(0 56%,100% 62%,100% 92%,0 86%);animation:glB 6s 1.6s infinite}
 .ltrs{position:relative;display:inline-block}
-.hl{display:inline-block;animation:camSnap .55s both,scanPass .26s both}
-.hl:nth-child(1){animation-delay:.1s,1.37s}
-.hl:nth-child(2){animation-delay:.28s,1.47s}
-.hl:nth-child(3){animation-delay:.46s,1.57s}
-.hl:nth-child(4){animation-delay:.64s,1.67s}
-.scan-line{position:absolute;top:-12%;height:124%;width:2px;background:linear-gradient(180deg,transparent,rgba(69,182,217,.7),#fff,rgba(69,182,217,.7),transparent);box-shadow:0 0 10px var(--teal),0 0 22px rgba(69,182,217,.5),0 0 4px #fff;pointer-events:none;animation:scanBeam .4s 1.35s both}
+.hl{display:inline-block;animation:camSnap .55s both,scanPass .28s both,scanReturn .28s both}
+.hl:nth-child(1){animation-delay:.1s,1.39s,2.41s}
+.hl:nth-child(2){animation-delay:.28s,1.52s,2.29s}
+.hl:nth-child(3){animation-delay:.46s,1.66s,2.17s}
+.hl:nth-child(4){animation-delay:.64s,1.79s,2.05s}
+.scan-line{position:absolute;top:-12%;height:124%;width:2px;background:linear-gradient(180deg,transparent,rgba(69,182,217,.7),#fff,rgba(69,182,217,.7),transparent);box-shadow:0 0 10px var(--teal),0 0 22px rgba(69,182,217,.5),0 0 4px #fff;pointer-events:none;animation:scanBeam 1.2s 1.35s both}
 
 .hero-abbrev{font-size:.78rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.5rem;animation:fadeUp .6s .85s both}
 .hero-rule{width:52px;height:2px;background:var(--teal);margin-bottom:1.5rem;transform-origin:left;animation:ruleIn .5s 1.05s both}
