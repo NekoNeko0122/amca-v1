@@ -49,6 +49,7 @@ body{animation:pageIn .5s ease both}
 @keyframes glA{0%,83%,100%{transform:none;opacity:0}84%{transform:translate(-9px,2px) skewX(-6deg);clip-path:polygon(0 2%,100% 10%,100% 44%,0 36%);opacity:1}85%{opacity:0}86%{transform:translate(7px,-3px) skewX(4deg);clip-path:polygon(0 28%,100% 36%,100% 67%,0 59%);opacity:.9}86.5%{opacity:0}87%{transform:translate(-12px,4px) skewX(-8deg);clip-path:polygon(0 2%,100% 10%,100% 44%,0 36%);opacity:1}88%{opacity:0}}
 @keyframes glB{0%,83%,100%{transform:none;opacity:0}84%{transform:translate(11px,-3px) skewX(7deg);clip-path:polygon(0 56%,100% 62%,100% 92%,0 86%);opacity:1}85%{opacity:0}86%{transform:translate(-8px,2px) skewX(-5deg);clip-path:polygon(0 32%,100% 40%,100% 72%,0 64%);opacity:.85}86.5%{opacity:0}87%{transform:translate(14px,-2px) skewX(6deg);clip-path:polygon(0 56%,100% 62%,100% 92%,0 86%);opacity:1}88%{opacity:0}}
 @keyframes camSnap{0%,4%{opacity:0;filter:brightness(0) blur(1px)}5%{opacity:1;filter:brightness(8) blur(0px);text-shadow:0 0 40px #fff,0 0 20px #fff,0 0 8px #fff}22%{filter:brightness(1.6);text-shadow:0 0 18px rgba(69,182,217,.75)}55%{filter:brightness(1.06);text-shadow:none}100%{opacity:1;filter:brightness(1)}}
+@keyframes scanBeam{0%{top:-8%;opacity:0}8%{opacity:1}85%{opacity:.85}100%{top:112%;opacity:0}}
 @keyframes shimmer{0%{left:-100%}100%{left:200%}}
 @keyframes scanDown{0%{top:8%;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:92%;opacity:0}}
 @keyframes scanStatus{0%,12%{opacity:0}22%{opacity:.65}80%{opacity:.65}90%,100%{opacity:0}}
@@ -88,6 +89,7 @@ nav.scrolled{background:rgba(7,19,32,.96);border-color:rgba(69,182,217,.15)}
 .hl:nth-child(2){animation-delay:.28s}
 .hl:nth-child(3){animation-delay:.46s}
 .hl:nth-child(4){animation-delay:.64s}
+.scan-line{position:absolute;left:-4%;width:108%;height:2px;background:linear-gradient(90deg,transparent,rgba(69,182,217,.5),#fff,rgba(69,182,217,.5),transparent);box-shadow:0 0 8px var(--teal),0 0 18px rgba(69,182,217,.45),0 0 3px #fff;pointer-events:none;animation:scanBeam .7s 1.35s both}
 
 .hero-abbrev{font-size:.78rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.5rem;animation:fadeUp .6s .85s both}
 .hero-rule{width:52px;height:2px;background:var(--teal);margin-bottom:1.5rem;transform-origin:left;animation:ruleIn .5s 1.05s both}
@@ -332,7 +334,7 @@ footer{background:#040e18;border-top:1px solid rgba(69,182,217,.07);padding:3.5r
 
     <div>
       <div class="hero-badge"><span class="badge-dot"></span>Available for Android &nbsp; v1.0</div>
-      <h1 class="hero-title" data-text="AMCA"><span class="hl">A</span><span class="hl">M</span><span class="hl">C</span><span class="hl">A</span></h1>
+      <h1 class="hero-title" data-text="AMCA"><span class="hl">A</span><span class="hl">M</span><span class="hl">C</span><span class="hl">A</span><span class="scan-line"></span></h1>
       <p class="hero-abbrev">Advanced Mathematics Calculator App</p>
       <div class="hero-rule"></div>
       <p class="hero-desc">Your all-in-one math learning companion for solving equations, exploring geometry, and analyzing statistics, right from your Android device.</p>
