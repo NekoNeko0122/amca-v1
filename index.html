@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMCA — Advanced Mathematics Calculator App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Monda:wght@400;700&family=Potta+One&family=Saira+Stencil+One&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#071320;--bg-dark:#0D1B2A;--bg-card:#0E2030;--bg-card2:#1B263B;
+  --teal:#45B6D9;--blue:#6B8ED6;--orange:#E07A45;
+  --border:#1E4560;--text:#fff;--sub:#BBCCDD;--muted:#557799;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Monda',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none}
+
+/* ── CURSOR ─────────────────────────────── */
+#cr{position:fixed;width:26px;height:26px;border:1.5px solid rgba(69,182,217,.7);border-radius:50%;pointer-events:none;z-index:9999;top:0;left:0;transform:translate(-50%,-50%);transition:width .22s,height .22s,border-color .22s,background .22s;will-change:transform}
+#cd{position:fixed;width:5px;height:5px;background:var(--teal);border-radius:50%;pointer-events:none;z-index:9999;top:0;left:0;transform:translate(-50%,-50%);will-change:transform}
+body.hovering #cr{width:42px;height:42px;border-color:rgba(69,182,217,.4);background:rgba(69,182,217,.06)}
+@media(pointer:coarse){body{cursor:auto}#cr,#cd{display:none}}
+
+/* ── PROGRESS BAR ───────────────────────── */
+#prog{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--teal),var(--blue),var(--orange));z-index:9997;transition:width .08s linear}
+
+/* ── PAGE ENTRANCE ──────────────────────── */
+body{animation:pageIn .5s ease both}
+@keyframes pageIn{from{opacity:0}to{opacity:1}}
+
+/* ── REVEAL ─────────────────────────────── */
+.rv{opacity:0;transform:translateY(34px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+.rv.on{opacity:1;transform:none}
+
+/* ── SHARED KEYFRAMES ───────────────────── */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes cwSpin{to{transform:rotate(360deg)}}
+@keyframes ccwSpin{to{transform:rotate(-360deg)}}
+@keyframes floatY{0%,100%{transform:translateY(0);opacity:.12}50%{transform:translateY(-14px);opacity:.3}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes ruleIn{from{opacity:0;transform:scaleX(0)}to{opacity:.45}}
+@keyframes vfIn{from{opacity:0;transform:scale(.9) rotate(-4deg)}to{opacity:1;transform:none}}
+@keyframes titleIn{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes titleGlow{0%,100%{text-shadow:0 0 18px rgba(69,182,217,.7),0 0 55px rgba(69,182,217,.35),0 0 90px rgba(69,182,217,.12)}50%{text-shadow:0 0 28px rgba(69,182,217,.95),0 0 75px rgba(69,182,217,.5),0 0 130px rgba(69,182,217,.22)}}
+@keyframes glA{0%,88%,100%{transform:none;opacity:0}89%{transform:translate(-4px,0);opacity:1}90%{opacity:0}91%{transform:translate(3px,-1px);opacity:1}92%{opacity:0}}
+@keyframes glB{0%,88%,100%{transform:none;opacity:0}89%{transform:translate(4px,0);opacity:1}90%{opacity:0}91%{transform:translate(-3px,1px);opacity:1}92%{opacity:0}}
+@keyframes shimmer{0%{left:-100%}100%{left:200%}}
+@keyframes scanDown{0%{top:8%;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:92%;opacity:0}}
+@keyframes scanStatus{0%,12%{opacity:0}22%{opacity:.65}80%{opacity:.65}90%,100%{opacity:0}}
+@keyframes borderSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes piScale{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes xhPulse{0%,100%{opacity:.18}50%{opacity:.5}}
+@keyframes rippleAnim{to{transform:translate(-50%,-50%) scale(180);opacity:0}}
+@keyframes countIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── NAVBAR ─────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1rem,5vw,3.5rem);height:64px;background:rgba(7,19,32,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(69,182,217,.07);transition:background .3s,border-color .3s}
+nav.scrolled{background:rgba(7,19,32,.96);border-color:rgba(69,182,217,.15)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-icon{width:34px;height:34px;flex-shrink:0}
+.nav-logo-text{font-family:'Saira Stencil One',sans-serif;font-size:1.4rem;color:var(--teal);letter-spacing:.06em}
+.nav-links{display:flex;gap:2.5rem;list-style:none}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.82rem;letter-spacing:.04em;transition:color .2s}
+.nav-links a:hover{color:var(--teal)}
+.btn-nav{background:var(--teal);color:#071320;border:none;padding:.48rem 1.4rem;border-radius:100px;font-family:'Potta One',sans-serif;font-size:.8rem;cursor:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;position:relative;overflow:hidden;transition:background .2s,box-shadow .2s}
+.btn-nav:hover{background:#62CBEB;box-shadow:0 4px 20px rgba(69,182,217,.3)}
+
+/* ── HERO ───────────────────────────────── */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:80px clamp(1rem,5vw,3.5rem) 5rem;overflow:hidden;background:var(--bg)}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-inner{max-width:1200px;width:100%;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;z-index:1}
+
+/* Hero text entrance */
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(69,182,217,.07);border:1px solid rgba(69,182,217,.22);padding:5px 16px;border-radius:100px;font-size:.7rem;color:var(--teal);margin-bottom:1.5rem;letter-spacing:.12em;text-transform:uppercase;animation:slideDown .6s .4s both}
+.badge-dot{width:6px;height:6px;background:var(--teal);border-radius:50%;animation:blink 2s ease-in-out infinite}
+
+.hero-title{font-family:'Saira Stencil One',sans-serif;font-size:clamp(5rem,12vw,8.5rem);color:var(--teal);letter-spacing:.05em;line-height:1;position:relative;animation:titleIn .8s .15s both,titleGlow 4s 1.2s ease-in-out infinite}
+.hero-title::before,.hero-title::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%}
+.hero-title::before{color:rgba(224,122,69,.7);clip-path:polygon(0 10%,100% 10%,100% 42%,0 42%);animation:glA 6s 3s infinite}
+.hero-title::after{color:rgba(107,142,214,.7);clip-path:polygon(0 58%,100% 58%,100% 88%,0 88%);animation:glB 6s 3s infinite}
+
+.hero-abbrev{font-size:.78rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.5rem;animation:fadeUp .6s .85s both}
+.hero-rule{width:52px;height:2px;background:var(--teal);margin-bottom:1.5rem;transform-origin:left;animation:ruleIn .5s 1.05s both}
+.hero-desc{font-size:1rem;color:var(--sub);line-height:1.78;max-width:420px;margin-bottom:2.25rem;animation:fadeUp .6s 1.15s both}
+.hero-cta{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2.75rem;animation:fadeUp .6s 1.35s both}
+.hero-stats{display:flex;gap:1.25rem;flex-wrap:wrap;animation:fadeUp .6s 1.55s both}
+
+/* Buttons */
+.btn-primary{background:var(--teal);color:#071320;border:none;padding:.9rem 2rem;border-radius:100px;font-family:'Potta One',sans-serif;font-size:1rem;cursor:none;text-decoration:none;display:inline-flex;align-items:center;gap:8px;position:relative;overflow:hidden;transition:background .25s,box-shadow .25s}
+.btn-primary:hover{background:#5DCDEA;box-shadow:0 8px 30px rgba(69,182,217,.38)}
+.btn-ghost{background:transparent;color:var(--teal);border:1px solid rgba(69,182,217,.32);padding:.9rem 2rem;border-radius:100px;font-family:'Monda',sans-serif;font-size:.9rem;cursor:none;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:border-color .25s,background .25s}
+.btn-ghost:hover{border-color:var(--teal);background:rgba(69,182,217,.07)}
+
+/* Stats */
+.stat-pill{background:rgba(14,32,48,.75);border:1px solid var(--border);padding:8px 18px;border-radius:10px;min-width:72px;text-align:center}
+.stat-num{font-size:1.35rem;font-weight:700;color:var(--teal);line-height:1}
+.stat-lbl{font-size:.67rem;color:var(--muted);letter-spacing:.06em;margin-top:3px}
+
+/* ── VIEWFINDER ─────────────────────────── */
+.hero-visual{display:flex;align-items:center;justify-content:center;position:relative;animation:vfIn 1s .5s both}
+.math-sym{position:absolute;font-size:1.5rem;font-family:serif;color:rgba(69,182,217,.12);pointer-events:none;animation:floatY 6s ease-in-out infinite}
+.math-sym:nth-child(1){top:3%;left:5%;animation-delay:0s}
+.math-sym:nth-child(2){top:9%;right:3%;animation-delay:1.1s}
+.math-sym:nth-child(3){bottom:18%;left:3%;animation-delay:2.2s}
+.math-sym:nth-child(4){bottom:5%;right:6%;animation-delay:.6s}
+.math-sym:nth-child(5){top:45%;left:0;animation-delay:1.7s}
+.math-sym:nth-child(6){top:40%;right:0;animation-delay:2.8s}
+
+.vf-wrap{position:relative;width:min(380px,88vw);height:min(380px,88vw)}
+.vf-svg{width:100%;height:100%;filter:drop-shadow(0 0 28px rgba(69,182,217,.3))}
+.vf-r1{animation:cwSpin 28s linear infinite;transform-origin:256px 256px}
+.vf-r2{animation:ccwSpin 18s linear infinite;transform-origin:256px 256px}
+.vf-xh{animation:xhPulse 4s ease-in-out infinite}
+.vf-pi{animation:piScale 3s ease-in-out infinite;transform-origin:256px 256px}
+
+/* Radar overlay */
+.vf-radar{position:absolute;inset:8%;border-radius:50%;background:conic-gradient(transparent 0deg,transparent 308deg,rgba(69,182,217,.02) 328deg,rgba(69,182,217,.1) 348deg,rgba(69,182,217,.24) 360deg);animation:cwSpin 4s linear infinite;pointer-events:none;mix-blend-mode:screen}
+
+/* Scanline */
+.vf-scanline{position:absolute;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,rgba(69,182,217,.65),transparent);animation:scanDown 3.8s ease-in-out infinite;border-radius:2px}
+
+/* HUD labels */
+.hud{position:absolute;font-size:.5rem;font-family:'Monda',monospace;color:var(--teal);opacity:.55;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.hud .bd{width:4px;height:4px;background:var(--teal);border-radius:50%;animation:blink 1.5s ease-in-out infinite;flex-shrink:0}
+.hud-tl{top:6%;left:6%}
+.hud-tr{top:6%;right:6%;flex-direction:row-reverse}
+.hud-bl{bottom:6%;left:6%}
+.hud-br{bottom:6%;right:6%;flex-direction:row-reverse}
+
+#scan-status{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:.55rem;color:var(--teal);letter-spacing:.2em;text-transform:uppercase;opacity:0;white-space:nowrap;animation:scanStatus 3.8s ease-in-out infinite}
+
+/* ── SHARED SECTION ─────────────────────── */
+section{padding:6rem clamp(1rem,5vw,3.5rem)}
+.si{max-width:1200px;margin:0 auto}
+.sl{font-size:.7rem;color:var(--teal);letter-spacing:.2em;text-transform:uppercase;margin-bottom:.75rem;position:relative;display:inline-block;overflow:hidden}
+.sl::after{content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(69,182,217,.55),transparent);animation:shimmer 3s ease-in-out infinite 1s}
+.st{font-size:clamp(1.75rem,4vw,2.5rem);font-weight:700;margin-bottom:1rem;line-height:1.2}
+.sd{color:var(--sub);font-size:.97rem;line-height:1.75;max-width:540px;margin-bottom:3rem}
+.hi{color:var(--teal)}
+
+/* ── FEATURES ───────────────────────────── */
+.features{background:var(--bg-dark)}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:1.25rem}
+.feat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:1.75rem 1.5rem;transition:border-color .3s,box-shadow .3s;transform-style:preserve-3d;will-change:transform}
+.feat-card:hover{border-color:rgba(69,182,217,.42);box-shadow:0 12px 36px rgba(69,182,217,.09)}
+.feat-ico{width:48px;height:48px;background:rgba(69,182,217,.08);border-radius:14px;margin-bottom:1.1rem;display:flex;align-items:center;justify-content:center;transition:background .3s,transform .3s}
+.feat-card:hover .feat-ico{background:rgba(69,182,217,.15);transform:scale(1.1) translateZ(4px)}
+.feat-ico svg{width:24px;height:24px;fill:none;stroke:var(--teal);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.feat-name{font-size:.975rem;font-weight:700;margin-bottom:.45rem}
+.feat-desc{font-size:.78rem;color:var(--muted);line-height:1.65}
+
+/* ── SUBJECTS ───────────────────────────── */
+.subjects{background:var(--bg)}
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem}
+.subj-card{border-radius:22px;padding:2rem 1.75rem;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s;transform-style:preserve-3d;will-change:transform}
+.subj-card::after{content:'';position:absolute;top:0;left:-100%;width:45%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.035),transparent);transition:left .5s}
+.subj-card:hover::after{left:160%}
+.subj-alg{background:#0E2636;border:1px solid #45B6D9}
+.subj-geo{background:#12152E;border:1px solid #6B8ED6}
+.subj-sta{background:#27180A;border:1px solid #E07A45}
+.subj-alg:hover{transform:translateY(-8px);box-shadow:0 18px 50px rgba(69,182,217,.2)}
+.subj-geo:hover{transform:translateY(-8px);box-shadow:0 18px 50px rgba(107,142,214,.2)}
+.subj-sta:hover{transform:translateY(-8px);box-shadow:0 18px 50px rgba(224,122,69,.2)}
+.subj-ico{width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;transition:transform .35s}
+.subj-card:hover .subj-ico{transform:scale(1.1) rotate(-4deg)}
+.subj-ico-alg{background:rgba(69,182,217,.12)}
+.subj-ico-geo{background:rgba(107,142,214,.12)}
+.subj-ico-sta{background:rgba(224,122,69,.12)}
+.subj-name{font-size:1.3rem;font-weight:700;margin-bottom:.6rem}
+.subj-name-alg{color:#45B6D9}
+.subj-name-geo{color:#6B8ED6}
+.subj-name-sta{color:#E07A45}
+.subj-desc{font-size:.875rem;color:var(--sub);line-height:1.65;margin-bottom:1.4rem}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.68rem;padding:3px 11px;border-radius:100px}
+.chip-alg{background:rgba(69,182,217,.1);color:#45B6D9;border:1px solid rgba(69,182,217,.3)}
+.chip-geo{background:rgba(107,142,214,.1);color:#6B8ED6;border:1px solid rgba(107,142,214,.3)}
+.chip-sta{background:rgba(224,122,69,.1);color:#E07A45;border:1px solid rgba(224,122,69,.3)}
+
+/* ── HOW IT WORKS ───────────────────────── */
+.how{background:linear-gradient(160deg,#0D1B2A 0%,#0F2027 100%)}
+.how .sl,.how .st,.how .sd{display:block;text-align:center}
+.how .sd{margin:0 auto 3rem}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.5rem}
+.step{text-align:center;padding:2.25rem 1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;transition:border-color .3s,transform .3s,box-shadow .3s}
+.step:hover{border-color:rgba(69,182,217,.35);transform:translateY(-5px);box-shadow:0 12px 32px rgba(69,182,217,.08)}
+.step-num{width:58px;height:58px;border:2px solid rgba(69,182,217,.35);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-family:'Saira Stencil One',sans-serif;font-size:1.3rem;color:var(--teal);position:relative;transition:border-color .3s,box-shadow .3s}
+.step:hover .step-num{border-color:var(--teal);box-shadow:0 0 18px rgba(69,182,217,.28)}
+.step-num::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(69,182,217,.1)}
+.step-title{font-size:1.05rem;font-weight:700;margin-bottom:.5rem}
+.step-desc{font-size:.82rem;color:var(--muted);line-height:1.65}
+
+/* ── TEAM ───────────────────────────────── */
+.team{background:var(--bg-dark)}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1.25rem}
+.team-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:2rem 1.5rem;text-align:center;transition:border-color .3s,transform .3s,box-shadow .3s}
+.team-card:hover{border-color:rgba(69,182,217,.28);transform:translateY(-5px);box-shadow:0 10px 32px rgba(0,0,0,.2)}
+.team-card.dim{opacity:.55}
+.team-card.dim:hover{opacity:.85}
+.t-av{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.1rem;font-weight:700;transition:transform .3s}
+.team-card:hover .t-av{transform:scale(1.08)}
+.t-name{font-size:.975rem;font-weight:700;margin-bottom:4px}
+.t-role{font-size:.78rem}
+
+/* ── CTA ────────────────────────────────── */
+.cta-section{background:var(--bg)}
+.cta-box{max-width:880px;margin:0 auto;background:linear-gradient(135deg,#0E2636 0%,#0D1B2A 50%,#1B263B 100%);border-radius:32px;padding:5rem 3rem;text-align:center;position:relative;overflow:hidden}
+/* Spinning border glow */
+.cta-box::before{content:'';position:absolute;inset:0;border-radius:32px;padding:1px;background:rgba(69,182,217,.15);pointer-events:none}
+.cta-spin{position:absolute;inset:0;border-radius:32px;overflow:hidden;pointer-events:none}
+.cta-spin::before{content:'';position:absolute;top:50%;left:50%;width:200%;height:200%;transform:translate(-50%,-50%);background:conic-gradient(transparent 0deg,transparent 270deg,rgba(69,182,217,.55) 310deg,rgba(107,142,214,.4) 340deg,transparent 360deg);animation:cwSpin 7s linear infinite}
+.cta-spin::after{content:'';position:absolute;inset:1px;border-radius:31px;background:linear-gradient(135deg,#0E2636 0%,#0D1B2A 50%,#1B263B 100%)}
+.cta-glow{position:absolute;top:-40%;left:50%;transform:translateX(-50%);width:500px;height:320px;background:radial-gradient(ellipse,rgba(69,182,217,.07) 0%,transparent 70%);pointer-events:none}
+.cta-vf{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.038;pointer-events:none}
+.cta-content{position:relative;z-index:1}
+.cta-title{font-size:clamp(1.8rem,4.5vw,2.8rem);font-weight:700;margin-bottom:1rem}
+.cta-desc{color:var(--sub);font-size:1rem;line-height:1.75;max-width:480px;margin:0 auto 2.5rem}
+.cta-row{display:flex;align-items:center;justify-content:center;gap:1.25rem;flex-wrap:wrap}
+.cta-meta{font-size:.75rem;color:var(--muted);line-height:1.8;text-align:left}
+
+/* ── FOOTER ─────────────────────────────── */
+footer{background:#040e18;border-top:1px solid rgba(69,182,217,.07);padding:3.5rem clamp(1rem,5vw,3.5rem) 2rem}
+.fi{max-width:1200px;margin:0 auto}
+.f-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2.5rem;margin-bottom:2.5rem}
+.f-brand-name{font-family:'Saira Stencil One',sans-serif;font-size:1.9rem;color:var(--teal);letter-spacing:.05em;display:block;margin-bottom:.6rem}
+.f-brand-desc{color:var(--muted);font-size:.8rem;line-height:1.7;max-width:270px}
+.f-logos{display:flex;align-items:center;gap:12px;margin-top:1.2rem}
+.f-logos img{width:38px;height:38px;object-fit:contain;opacity:.6}
+.f-col h4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.f-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.f-col a{color:var(--sub);text-decoration:none;font-size:.85rem;transition:color .2s}
+.f-col a:hover{color:var(--teal)}
+.f-div{height:1px;background:rgba(69,182,217,.06);margin-bottom:1.5rem}
+.f-bot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.f-bot p{font-size:.72rem;color:var(--muted)}
+
+/* ── STORE BUTTONS ──────────────────────── */
+.store-row{display:flex;gap:.875rem;justify-content:center;flex-wrap:wrap}
+.store-btn{display:flex;align-items:center;gap:11px;background:rgba(14,32,48,.85);border:1px solid var(--border);padding:.85rem 1.3rem;border-radius:14px;min-width:158px;text-decoration:none;color:var(--text);transition:all .3s;position:relative;cursor:default}
+.store-btn.s-avail{border-color:rgba(69,182,217,.38);cursor:none}
+.store-btn.s-avail:hover{border-color:var(--teal);background:rgba(69,182,217,.09);transform:translateY(-2px);box-shadow:0 8px 26px rgba(69,182,217,.22)}
+.store-btn.s-soon{opacity:.42}
+.sbt{display:block;font-size:.57rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.store-btn.s-avail .sbt{color:var(--teal)}
+.store-btn.s-soon .sbt{color:var(--orange)}
+.sbn{display:block;font-size:.9rem;font-weight:700}
+.sbtag{position:absolute;top:-9px;right:8px;background:var(--orange);color:#fff;font-size:.52rem;font-weight:700;padding:2px 8px;border-radius:100px;letter-spacing:.07em;text-transform:uppercase;box-shadow:0 2px 8px rgba(224,122,69,.38)}
+
+/* ── RESPONSIVE ─────────────────────────── */
+@media(max-width:800px){
+  .hero-inner{grid-template-columns:1fr;text-align:center}
+  .hero-cta,.hero-stats,.hero-badge{justify-content:center}
+  .hero-rule{margin:0 auto 1.5rem}
+  .hero-desc{margin:0 auto 2.25rem}
+  .hero-visual{order:-1}
+  .vf-wrap{width:min(270px,80vw);height:min(270px,80vw)}
+  .nav-links{display:none}
+  .cta-box{padding:3.5rem 1.5rem}
+  .f-top{flex-direction:column}
+  .f-bot{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- cursor -->
+<div id="cr"></div>
+<div id="cd"></div>
+<!-- progress -->
+<div id="prog"></div>
+
+<!-- ── NAVBAR ──────────────────────────────────── -->
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <svg class="nav-logo-icon" viewBox="0 0 34 34" fill="none">
+      <rect width="34" height="34" rx="7" fill="#071320"/>
+      <circle cx="17" cy="17" r="12.5" stroke="#45B6D9" stroke-width=".8" opacity=".2"/>
+      <circle cx="17" cy="17" r="9" stroke="#45B6D9" stroke-width=".8" opacity=".3"/>
+      <circle cx="17" cy="17" r="5.5" stroke="#45B6D9" stroke-width=".8" opacity=".4"/>
+      <line x1="17" y1="2" x2="17" y2="32" stroke="#45B6D9" stroke-width=".6" opacity=".2"/>
+      <line x1="2" y1="17" x2="32" y2="17" stroke="#45B6D9" stroke-width=".6" opacity=".2"/>
+      <polyline points="4,9 4,4 9,4" stroke="#45B6D9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="25,4 30,4 30,9" stroke="#45B6D9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="4,25 4,30 9,30" stroke="#45B6D9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="25,30 30,30 30,25" stroke="#45B6D9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="17" cy="17" r="3.5" fill="#071320" stroke="#45B6D9" stroke-width="1.2"/>
+      <line x1="15.5" y1="16.3" x2="18.5" y2="16.3" stroke="#45B6D9" stroke-width=".9" stroke-linecap="round"/>
+      <path d="M16,16.3 C16,17 15.8,17.8 15.5,18.5" stroke="#45B6D9" stroke-width=".9" stroke-linecap="round" fill="none"/>
+      <line x1="18" y1="16.3" x2="18" y2="18.5" stroke="#45B6D9" stroke-width=".9" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-text">AMCA</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#subjects">Subjects</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#team">Team</a></li>
+  </ul>
+  <a href="#download" class="btn-nav mag">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    Download
+  </a>
+</nav>
+
+<!-- ── HERO ────────────────────────────────────── -->
+<section class="hero" id="home">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+
+    <div>
+      <div class="hero-badge"><span class="badge-dot"></span>Available for Android &nbsp; v1.0</div>
+      <h1 class="hero-title" data-text="AMCA">AMCA</h1>
+      <p class="hero-abbrev">Advanced Mathematics Calculator App</p>
+      <div class="hero-rule"></div>
+      <p class="hero-desc">Your all-in-one math learning companion for solving equations, exploring geometry, and analyzing statistics, right from your Android device.</p>
+      <div class="hero-cta">
+        <!-- Android APK -->
+        <a href="AMCA-v1.0.apk" download="AMCA-v1.0.apk" class="store-btn s-avail mag rpl">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+          <div><span class="sbt">Direct Download</span><span class="sbn">Android APK</span></div>
+        </a>
+        <!-- Google Play -->
+        <div class="store-btn s-soon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" opacity=".8"><path d="M3.18 23.76A2 2 0 0 1 2 22V2a2 2 0 0 1 1.18-1.76l11.37 11.37L3.18 23.76zm2.26-1.42 8.55-4.95-1.98-1.96-6.57 6.91zM2 2.76V21.24L9.1 12 2 2.76zm3.44 1.9 6.57 6.9 1.98-1.96L5.44 4.66zM21.12 10.6l-2.08-1.2-2.42 2.6 2.42 2.6 2.1-1.21a2 2 0 0 0 0-3.6l-.02.01z"/></svg>
+          <div><span class="sbt">Coming Soon</span><span class="sbn">Google Play</span></div>
+          <span class="sbtag">Soon</span>
+        </div>
+        <!-- App Store -->
+        <div class="store-btn s-soon">
+          <svg width="19" height="22" viewBox="0 0 24 24" fill="currentColor" opacity=".8"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          <div><span class="sbt">Coming Soon</span><span class="sbn">App Store</span></div>
+          <span class="sbtag">Soon</span>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-pill"><div class="stat-num" data-count="3">0</div><div class="stat-lbl">Subjects</div></div>
+        <div class="stat-pill"><div class="stat-num" data-count="5">0</div><div class="stat-lbl">Features</div></div>
+        <div class="stat-pill"><div class="stat-num">Free</div><div class="stat-lbl">Android App</div></div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <span class="math-sym">∑</span><span class="math-sym">∫</span>
+      <span class="math-sym">∆</span><span class="math-sym">σ</span>
+      <span class="math-sym">θ</span><span class="math-sym">√</span>
+      <div class="vf-wrap">
+        <div class="vf-radar"></div>
+        <div class="vf-scanline"></div>
+        <div class="hud hud-tl"><span class="bd"></span>AMCA · ACTIVE</div>
+        <div class="hud hud-tr">VER 1.0<span class="bd"></span></div>
+        <div class="hud hud-bl"><span class="bd"></span><span id="hcoords">X:256.0 Y:256.0</span></div>
+        <div class="hud hud-br">MATH SCAN<span class="bd"></span></div>
+        <svg class="vf-svg" viewBox="0 0 512 512" fill="none">
+          <rect width="512" height="512" rx="92" fill="#071320"/>
+          <rect x="16" y="16" width="480" height="480" rx="80" fill="none" stroke="#45B6D9" stroke-width="3" opacity=".35"/>
+          <g class="vf-r1"><circle cx="256" cy="256" r="200" fill="none" stroke="#45B6D9" stroke-width="1.5" opacity=".18" stroke-dasharray="10 5"/></g>
+          <g class="vf-r2"><circle cx="256" cy="256" r="149" fill="none" stroke="#45B6D9" stroke-width="1.5" opacity=".28" stroke-dasharray="7 4"/></g>
+          <circle cx="256" cy="256" r="102" fill="none" stroke="#45B6D9" stroke-width="1.5" opacity=".38"/>
+          <g class="vf-xh">
+            <line x1="256" y1="36" x2="256" y2="476" stroke="#45B6D9" stroke-width="1.2" opacity=".22"/>
+            <line x1="36" y1="256" x2="476" y2="256" stroke="#45B6D9" stroke-width="1.2" opacity=".22"/>
+          </g>
+          <line x1="256" y1="36" x2="256" y2="64" stroke="#45B6D9" stroke-width="5" stroke-linecap="round"/>
+          <line x1="256" y1="448" x2="256" y2="476" stroke="#45B6D9" stroke-width="5" stroke-linecap="round"/>
+          <line x1="36" y1="256" x2="64" y2="256" stroke="#45B6D9" stroke-width="5" stroke-linecap="round"/>
+          <line x1="448" y1="256" x2="476" y2="256" stroke="#45B6D9" stroke-width="5" stroke-linecap="round"/>
+          <polyline points="77,139 77,77 139,77" fill="none" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="373,77 435,77 435,139" fill="none" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="77,373 77,435 139,435" fill="none" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="373,435 435,435 435,373" fill="none" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <g class="vf-pi">
+            <circle cx="256" cy="256" r="56" fill="#071320" stroke="#45B6D9" stroke-width="4.5"/>
+            <line x1="247" y1="250" x2="265" y2="250" stroke="#45B6D9" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M250,250 C250,253.5 249,257 248,263" fill="none" stroke="#45B6D9" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="262" y1="250" x2="262" y2="263" stroke="#45B6D9" stroke-width="3.5" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <div id="scan-status">● SCANNING MATH ENVIRONMENT</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── FEATURES ────────────────────────────────── -->
+<section class="features" id="features">
+  <div class="si">
+    <p class="sl rv">What's Inside</p>
+    <h2 class="st rv" style="transition-delay:.1s">Everything you need to <span class="hi">master math</span></h2>
+    <p class="sd rv" style="transition-delay:.2s">AMCA brings together a scientific calculator, camera scanner, quizzes, and structured lessons in one clean app.</p>
+    <div class="feat-grid">
+      <div class="feat-card rv tilt" style="transition-delay:.05s">
+        <div class="feat-ico"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="11" y2="10"/><line x1="13" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="11" y2="14"/><line x1="13" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="11" y2="18"/><line x1="13" y1="18" x2="16" y2="18"/></svg></div>
+        <h3 class="feat-name">Calculator</h3>
+        <p class="feat-desc">Scientific calculator for solving expressions and equations across all math domains.</p>
+      </div>
+      <div class="feat-card rv tilt" style="transition-delay:.1s">
+        <div class="feat-ico"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <h3 class="feat-name">Camera Scan</h3>
+        <p class="feat-desc">Point your camera at a math problem and let AMCA scan and process it instantly.</p>
+      </div>
+      <div class="feat-card rv tilt" style="transition-delay:.15s">
+        <div class="feat-ico"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3 class="feat-name">Quizzes</h3>
+        <p class="feat-desc">Test your knowledge with subject-specific quizzes. Track progress and improve over time.</p>
+      </div>
+      <div class="feat-card rv tilt" style="transition-delay:.2s">
+        <div class="feat-ico"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h3 class="feat-name">Lessons</h3>
+        <p class="feat-desc">Structured lessons across Algebra, Geometry, and Statistics to guide your learning journey.</p>
+      </div>
+      <div class="feat-card rv tilt" style="transition-delay:.25s">
+        <div class="feat-ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <h3 class="feat-name">Math Tools</h3>
+        <p class="feat-desc">Utility tools for conversions, formula lookups, and step-by-step problem solving.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SUBJECTS ─────────────────────────────────── -->
+<section class="subjects" id="subjects">
+  <div class="si">
+    <p class="sl rv">Three Disciplines</p>
+    <h2 class="st rv" style="transition-delay:.1s">Explore every <span class="hi">math domain</span></h2>
+    <p class="sd rv" style="transition-delay:.2s">Dive deep into the three core areas of mathematics, each with its own color, lessons, tools, and quizzes.</p>
+    <div class="subj-grid">
+      <div class="subj-card subj-alg rv">
+        <div class="subj-ico subj-ico-alg"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#45B6D9" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/><line x1="4" y1="4" x2="9" y2="9"/><line x1="15" y1="15" x2="20" y2="20"/></svg></div>
+        <h3 class="subj-name subj-name-alg">Algebra</h3>
+        <p class="subj-desc">Equations, expressions and functions. Solve linear, quadratic, and polynomial equations with step-by-step guidance.</p>
+        <div class="chip-row"><span class="chip chip-alg">Equations</span><span class="chip chip-alg">Expressions</span><span class="chip chip-alg">Functions</span><span class="chip chip-alg">Polynomials</span></div>
+      </div>
+      <div class="subj-card subj-geo rv" style="transition-delay:.15s">
+        <div class="subj-ico subj-ico-geo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6B8ED6" stroke-width="2" stroke-linecap="round"><polygon points="12,2 22,20 2,20"/></svg></div>
+        <h3 class="subj-name subj-name-geo">Geometry</h3>
+        <p class="subj-desc">Shapes, areas, angles and proofs. Visualize and compute properties of 2D and 3D geometric figures.</p>
+        <div class="chip-row"><span class="chip chip-geo">Shapes</span><span class="chip chip-geo">Areas</span><span class="chip chip-geo">Angles</span><span class="chip chip-geo">Proofs</span></div>
+      </div>
+      <div class="subj-card subj-sta rv" style="transition-delay:.3s">
+        <div class="subj-ico subj-ico-sta"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E07A45" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
+        <h3 class="subj-name subj-name-sta">Statistics</h3>
+        <p class="subj-desc">Data, probability and analysis. Understand distributions, trends, and statistical measures with ease.</p>
+        <div class="chip-row"><span class="chip chip-sta">Data</span><span class="chip chip-sta">Probability</span><span class="chip chip-sta">Analysis</span><span class="chip chip-sta">Distributions</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ─────────────────────────────── -->
+<section class="how" id="how">
+  <div class="si">
+    <p class="sl rv">Simple Process</p>
+    <h2 class="st rv" style="transition-delay:.1s">How it works</h2>
+    <p class="sd rv" style="transition-delay:.2s">Getting started takes about a minute. No account or sign-up needed.</p>
+    <div class="steps">
+      <div class="step rv"><div class="step-num">1</div><h3 class="step-title">Download &amp; Install</h3><p class="step-desc">Download the APK and install AMCA on any Android 7.0 or newer device. Completely free.</p></div>
+      <div class="step rv" style="transition-delay:.15s"><div class="step-num">2</div><h3 class="step-title">Choose a Subject</h3><p class="step-desc">Pick Algebra, Geometry, or Statistics and start exploring at your own pace.</p></div>
+      <div class="step rv" style="transition-delay:.3s"><div class="step-num">3</div><h3 class="step-title">Learn &amp; Practice</h3><p class="step-desc">Work through lessons, use the calculator, scan problems with the camera, and take quizzes.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TEAM ─────────────────────────────────────── -->
+<section class="team" id="team">
+  <div class="si">
+    <p class="sl rv">The Team</p>
+    <h2 class="st rv" style="transition-delay:.1s">Built by students, <span class="hi">for students</span></h2>
+    <p class="sd rv" style="transition-delay:.2s">AMCA was created by a passionate student team determined to make advanced math more accessible.</p>
+    <div class="team-grid">
+      <div class="team-card rv"><div class="t-av" style="background:rgba(69,182,217,.12);color:#45B6D9;border:2px solid rgba(69,182,217,.28)">AJ</div><div class="t-name">Aaron James Colocado</div><div class="t-role" style="color:#45B6D9">Project Leader</div></div>
+      <div class="team-card rv" style="transition-delay:.1s"><div class="t-av" style="background:rgba(107,142,214,.12);color:#6B8ED6;border:2px solid rgba(107,142,214,.28)">JD</div><div class="t-name">Jairus Dela Cruz</div><div class="t-role" style="color:#6B8ED6">Content Developer</div></div>
+      <div class="team-card rv" style="transition-delay:.2s"><div class="t-av" style="background:rgba(224,122,69,.12);color:#E07A45;border:2px solid rgba(224,122,69,.28)">KA</div><div class="t-name">Khaleb Arkin Digal</div><div class="t-role" style="color:#E07A45">Concept Designer</div></div>
+      <div class="team-card rv dim" style="transition-delay:.3s">
+        <div class="t-av" style="background:rgba(51,68,85,.25);color:#667788;border:2px solid rgba(51,68,85,.4)">AE</div>
+        <div class="t-name" style="color:#445566">Andrew Ed Colocado</div>
+        <div class="t-role" style="color:#334455">Consultant</div>
+        <div style="font-size:.68rem;color:#273340;margin-top:5px;letter-spacing:.04em">Project Adviser</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DOWNLOAD CTA ──────────────────────────────── -->
+<section class="cta-section" id="download">
+  <div class="cta-box rv">
+    <div class="cta-spin"></div>
+    <div class="cta-glow"></div>
+    <div class="cta-vf">
+      <svg viewBox="0 0 512 512" width="520" height="520" fill="none">
+        <circle cx="256" cy="256" r="200" stroke="#45B6D9" stroke-width="2"/><circle cx="256" cy="256" r="149" stroke="#45B6D9" stroke-width="2"/><circle cx="256" cy="256" r="102" stroke="#45B6D9" stroke-width="2"/>
+        <line x1="256" y1="36" x2="256" y2="476" stroke="#45B6D9" stroke-width="1.5"/><line x1="36" y1="256" x2="476" y2="256" stroke="#45B6D9" stroke-width="1.5"/>
+        <polyline points="77,139 77,77 139,77" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="373,77 435,77 435,139" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="77,373 77,435 139,435" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="373,435 435,435 435,373" stroke="#45B6D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="cta-content">
+      <p class="sl" style="display:block;margin-bottom:.75rem">Free Download</p>
+      <h2 class="cta-title">Ready to level up <span class="hi">your math?</span></h2>
+      <p class="cta-desc">Download AMCA for free on Android. No subscriptions, no ads. Just a powerful tool made for students.</p>
+      <div class="store-row">
+        <!-- Direct APK -->
+        <a href="AMCA-v1.0.apk" download="AMCA-v1.0.apk" class="store-btn s-avail mag rpl">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+          <div><span class="sbt">Direct Download</span><span class="sbn">Android APK</span></div>
+        </a>
+        <!-- Google Play -->
+        <div class="store-btn s-soon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" opacity=".8"><path d="M3.18 23.76A2 2 0 0 1 2 22V2a2 2 0 0 1 1.18-1.76l11.37 11.37L3.18 23.76zm2.26-1.42 8.55-4.95-1.98-1.96-6.57 6.91zM2 2.76V21.24L9.1 12 2 2.76zm3.44 1.9 6.57 6.9 1.98-1.96L5.44 4.66zM21.12 10.6l-2.08-1.2-2.42 2.6 2.42 2.6 2.1-1.21a2 2 0 0 0 0-3.6l-.02.01z"/></svg>
+          <div><span class="sbt">Coming Soon</span><span class="sbn">Google Play</span></div>
+          <span class="sbtag">Soon</span>
+        </div>
+        <!-- App Store -->
+        <div class="store-btn s-soon">
+          <svg width="19" height="22" viewBox="0 0 24 24" fill="currentColor" opacity=".8"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          <div><span class="sbt">Coming Soon</span><span class="sbn">App Store</span></div>
+          <span class="sbtag">Soon</span>
+        </div>
+      </div>
+      <p style="font-size:.7rem;color:var(--muted);margin-top:1.25rem">Android 7.0 or newer required &nbsp; · &nbsp; Version 1.0 &nbsp; · &nbsp; Free</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────── -->
+<footer>
+  <div class="fi">
+    <div class="f-top">
+      <div>
+        <span class="f-brand-name">AMCA</span>
+        <p class="f-brand-desc">Advanced Mathematics Calculator App. A free Android companion for students exploring algebra, geometry, and statistics.</p>
+        <div class="f-logos">
+          <img src="../AMCAv2/app/src/main/res/drawable/logo1.png" alt="School" onerror="this.style.display='none'">
+          <img src="../AMCAv2/app/src/main/res/drawable/logo2.png" alt="DepEd" onerror="this.style.display='none'">
+        </div>
+      </div>
+      <div class="f-col">
+        <h4>App</h4>
+        <ul><li><a href="#features">Features</a></li><li><a href="#subjects">Subjects</a></li><li><a href="#how">How It Works</a></li><li><a href="#download">Download</a></li></ul>
+      </div>
+      <div class="f-col">
+        <h4>Team</h4>
+        <ul><li><a href="#team">Aaron James Colocado</a></li><li><a href="#team">Jairus Dela Cruz</a></li><li><a href="#team">Khaleb Arkin Digal</a></li></ul>
+      </div>
+    </div>
+    <div class="f-div"></div>
+    <div class="f-bot">
+      <p>© 2025 AMCA. All rights reserved.</p>
+      <p>A.J. Colocado · J. Dela Cruz · K.A. Digal</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ── CURSOR ──────────────────────────────────── */
+const CR = document.getElementById('cr');
+const CD = document.getElementById('cd');
+let mx=0,my=0,rx=0,ry=0;
+
+document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; CD.style.left=mx+'px'; CD.style.top=my+'px'; });
+
+(function tick(){
+  rx+=(mx-rx)*.11; ry+=(my-ry)*.11;
+  CR.style.left=rx+'px'; CR.style.top=ry+'px';
+  requestAnimationFrame(tick);
+})();
+
+document.querySelectorAll('a,button,.feat-card,.subj-card,.team-card,.step').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hovering'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hovering'));
+});
+
+/* ── SCROLL PROGRESS ────────────────────────── */
+const prog = document.getElementById('prog');
+const nav  = document.getElementById('nav');
+window.addEventListener('scroll',()=>{
+  const s=document.documentElement.scrollTop, h=document.documentElement.scrollHeight-innerHeight;
+  prog.style.width=(s/h*100)+'%';
+  nav.classList.toggle('scrolled',s>30);
+},{passive:true});
+
+/* ── MATH SYMBOL CANVAS ─────────────────────── */
+const cvs=document.getElementById('hero-canvas'), ctx=cvs.getContext('2d');
+let W,H,pts=[];
+const CHARS=['0','1','2','3','4','5','6','7','8','9','+','-','=','%','x','y','z',
+             'π','Σ','∫','√','Δ','σ','θ',
+             '±','∞','<','>','²','³','÷','×'];
+
+function resize(){ W=cvs.width=cvs.offsetWidth; H=cvs.height=cvs.offsetHeight; }
+
+function mkPt(){
+  return{x:Math.random()*W,y:Math.random()*H,
+    vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,
+    ch:CHARS[Math.floor(Math.random()*CHARS.length)],
+    sz:Math.random()*9+8, a:Math.random()*.16+.04,
+    rot:(Math.random()-.5)*.5, rotV:(Math.random()-.5)*.003};
+}
+
+function initPts(){ resize(); pts=Array.from({length:60},mkPt); }
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV;
+    if(p.x<-20)p.x=W+20; if(p.x>W+20)p.x=-20;
+    if(p.y<-20)p.y=H+20; if(p.y>H+20)p.y=-20;
+    ctx.save();
+    ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.font=`${p.sz}px 'Monda',monospace`;
+    ctx.fillStyle=`rgba(69,182,217,${p.a})`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.ch,0,0);
+    ctx.restore();
+  });
+  for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+    if(d<110){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(69,182,217,${.06*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke();}
+  }
+  requestAnimationFrame(draw);
+}
+window.addEventListener('resize',initPts);
+initPts(); draw();
+
+/* ── HUD COORDS ─────────────────────────────── */
+const hc=document.getElementById('hcoords');
+setInterval(()=>{
+  hc.textContent=`X:${(220+Math.random()*72).toFixed(1)} Y:${(220+Math.random()*72).toFixed(1)}`;
+},1600);
+
+/* ── SCROLL REVEAL ──────────────────────────── */
+const rvObs=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('on');rvObs.unobserve(e.target);} }),{threshold:.12});
+document.querySelectorAll('.rv').forEach(el=>rvObs.observe(el));
+
+/* ── COUNTER ─────────────────────────────────── */
+const cntObs=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;
+  const el=e.target, target=+el.dataset.count, dur=900, t0=performance.now();
+  (function t(now){ const p=Math.min((now-t0)/dur,1), ease=1-Math.pow(1-p,3);
+    el.textContent=Math.round(ease*target); if(p<1)requestAnimationFrame(t); })(t0);
+  cntObs.unobserve(el);
+}),{threshold:.5});
+document.querySelectorAll('[data-count]').forEach(el=>cntObs.observe(el));
+
+/* ── 3D TILT ─────────────────────────────────── */
+document.querySelectorAll('.tilt').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5;
+    const y=(e.clientY-r.top)/r.height-.5;
+    card.style.transform=`perspective(600px) rotateY(${x*10}deg) rotateX(${-y*10}deg) translateZ(6px)`;
+    card.style.transition='border-color .3s,box-shadow .3s';
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transition='transform .45s cubic-bezier(.22,1,.36,1),border-color .3s,box-shadow .3s';
+    card.style.transform='';
+  });
+});
+
+/* ── MAGNETIC BUTTONS ────────────────────────── */
+document.querySelectorAll('.mag').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{
+    const r=btn.getBoundingClientRect();
+    const x=(e.clientX-r.left-r.width/2)*.22;
+    const y=(e.clientY-r.top-r.height/2)*.22;
+    btn.style.transform=`translate(${x}px,${y}px)`;
+    btn.style.transition='background .25s,box-shadow .25s';
+  });
+  btn.addEventListener('mouseleave',()=>{
+    btn.style.transform='';
+    btn.style.transition='transform .4s cubic-bezier(.22,1,.36,1),background .25s,box-shadow .25s';
+  });
+});
+
+/* ── RIPPLE ──────────────────────────────────── */
+document.querySelectorAll('.rpl').forEach(btn=>{
+  btn.addEventListener('click',e=>{
+    const s=document.createElement('span');
+    const r=btn.getBoundingClientRect();
+    s.style.cssText=`position:absolute;border-radius:50%;background:rgba(255,255,255,.28);width:4px;height:4px;left:${e.clientX-r.left}px;top:${e.clientY-r.top}px;transform:translate(-50%,-50%) scale(0);animation:rippleAnim .55s forwards;pointer-events:none`;
+    btn.appendChild(s);
+    s.addEventListener('animationend',()=>s.remove());
+  });
+});
+
+/* inject ripple keyframe */
+const ks=document.createElement('style');
+ks.textContent='@keyframes rippleAnim{to{transform:translate(-50%,-50%) scale(160);opacity:0}}';
+document.head.appendChild(ks);
+</script>
+</body>
+</html>
